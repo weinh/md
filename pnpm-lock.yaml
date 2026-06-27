@@ -395,6 +395,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@4.4.3)
+      juice:
+        specifier: 12.1.1
+        version: 12.1.1(patch_hash=dcd1f89cb59a233375a0b488e0c0fd2c299ff1c4ef138410f7c3018f3a25186d)
       tsx:
         specifier: ^4.22.4
         version: 4.22.4

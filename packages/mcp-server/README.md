@@ -22,24 +22,25 @@ pnpm install
 
 Convert Markdown text to styled HTML using the full doocs/md rendering pipeline.
 
-| Parameter          | Type                               | Default          | Description                                            |
-| ------------------ | ---------------------------------- | ---------------- | ------------------------------------------------------ |
-| `markdown`         | `string`                           | —                | Markdown source text                                   |
-| `theme`            | `"default" \| "grace" \| "simple"` | `"default"`      | Visual theme (经典 / 优雅 / 简洁)                      |
-| `primaryColor`     | `string (hex)`                     | `"#0F4C81"`      | Primary accent color (see `list_colors`)               |
-| `fontFamily`       | `string`                           | 无衬线预设       | Font family stack (see `list_fonts`)                   |
-| `fontSize`         | `string (px)`                      | `"16px"`         | Base font size (see `list_font_sizes`)                 |
-| `legend`           | `string`                           | `"alt"`          | Image caption format (see `list_legend_formats`)       |
-| `isMacCodeBlock`   | `boolean`                          | `false`          | Render code blocks with a macOS-style title bar        |
-| `isShowLineNumber` | `boolean`                          | `false`          | Show line numbers in code blocks                       |
-| `citeStatus`       | `boolean`                          | `false`          | Convert links to footnote-style citations              |
-| `countStatus`      | `boolean`                          | `false`          | Prepend a reading-time estimate                        |
-| `themeMode`        | `"light" \| "dark"`                | `"light"`        | Color mode for diagram extensions                      |
-| `isUseIndent`      | `boolean`                          | `false`          | Indent paragraph first lines                           |
-| `isUseJustify`     | `boolean`                          | `false`          | Justify paragraph text                                 |
-| `headingStyles`    | `object`                           | `{}`             | Per-level heading styles (see `list_heading_styles`)   |
-| `codeBlockTheme`   | preset URL                         | GitHub Dark 主题 | highlight.js preset from `list_code_block_themes` only |
-| `customCSS`        | `string`                           | `""`             | Additional custom CSS (highest priority)               |
+| Parameter          | Type                               | Default          | Description                                                                                                               |
+| ------------------ | ---------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `markdown`         | `string`                           | —                | Markdown source text                                                                                                      |
+| `theme`            | `"default" \| "grace" \| "simple"` | `"default"`      | Visual theme (经典 / 优雅 / 简洁)                                                                                         |
+| `primaryColor`     | `string (hex)`                     | `"#0F4C81"`      | Primary accent color (see `list_colors`)                                                                                  |
+| `fontFamily`       | `string`                           | 无衬线预设       | Font family stack (see `list_fonts`)                                                                                      |
+| `fontSize`         | `string (px)`                      | `"16px"`         | Base font size (see `list_font_sizes`)                                                                                    |
+| `legend`           | `string`                           | `"alt"`          | Image caption format (see `list_legend_formats`)                                                                          |
+| `isMacCodeBlock`   | `boolean`                          | `false`          | Render code blocks with a macOS-style title bar                                                                           |
+| `isShowLineNumber` | `boolean`                          | `false`          | Show line numbers in code blocks                                                                                          |
+| `citeStatus`       | `boolean`                          | `false`          | Convert links to footnote-style citations                                                                                 |
+| `countStatus`      | `boolean`                          | `false`          | Prepend a reading-time estimate                                                                                           |
+| `themeMode`        | `"light" \| "dark"`                | `"light"`        | Color mode for diagram extensions                                                                                         |
+| `isUseIndent`      | `boolean`                          | `false`          | Indent paragraph first lines                                                                                              |
+| `isUseJustify`     | `boolean`                          | `false`          | Justify paragraph text                                                                                                    |
+| `headingStyles`    | `object`                           | `{}`             | Per-level heading styles (see `list_heading_styles`)                                                                      |
+| `codeBlockTheme`   | preset URL                         | GitHub Dark 主题 | highlight.js preset from `list_code_block_themes` only                                                                    |
+| `customCSS`        | `string`                           | `""`             | Additional custom CSS (highest priority)                                                                                  |
+| `inlineStyles`     | `boolean`                          | `true`           | Inline all CSS into `style=""` and drop the `<style>` tag (recommended for WeChat; set `false` to keep a `<style>` block) |
 
 Returns `{ html, frontMatter, readingTime: { words, minutes } }`.
 

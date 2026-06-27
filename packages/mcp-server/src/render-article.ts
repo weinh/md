@@ -31,6 +31,7 @@ export interface RenderMarkdownInput {
   headingStyles?: HeadingStylesInput
   codeBlockTheme?: string
   customCSS?: string
+  inlineStyles?: boolean
 }
 
 const themeDir = path.resolve(import.meta.dirname, `../../shared/src/configs/theme-css`)
@@ -103,6 +104,23 @@ export async function fetchCodeBlockCSS(url: string): Promise<string> {
   }
 }
 
+/**
+ * Inline every CSS rule into element `style=""` attributes and drop the
+ * `<style>` tag, producing WeChat-ready HTML (WeChat strips `<style>` tags and
+ * class-based rules). juice also resolves CSS variables — including nested
+ * forms like `hsl(var(--foreground))` — to concrete values, which standalone
+ * output needs since it has no host cascade. Mirrors the Web app's export
+ * pipeline (apps/web/src/services/export/clipboard.ts) but relies on juice's
+ * variable resolution instead of manual string replaces.
+ */
+async function inlineStylesheet(html: string): Promise<string> {
+  const { default: juice } = await import(`juice`)
+  return juice(html, {
+    inlinePseudoElements: true,
+    preserveImportant: true,
+  })
+}
+
 function normalizeHeadingStyles(input?: HeadingStylesInput): HeadingStyles | undefined {
   if (!input)
     return undefined
@@ -164,7 +182,9 @@ export async function buildRenderedOutput(input: RenderMarkdownInput) {
 
   mergedCSS = processCSS(mergedCSS)
 
-  const html = `<style>\n${mergedCSS}\n</style>\n${processedHtml}`
+  const styledHtml = `<style>\n${mergedCSS}\n</style>\n${processedHtml}`
+  const inlineStyles = input.inlineStyles ?? defaultRenderOptions.inlineStyles
+  const html = inlineStyles ? await inlineStylesheet(styledHtml) : styledHtml
 
   return {
     html,

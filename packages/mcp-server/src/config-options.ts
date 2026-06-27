@@ -121,4 +121,5 @@ export const defaultRenderOptions = {
   themeMode: `light` as const,
   isUseIndent: false,
   isUseJustify: false,
+  inlineStyles: true,
 }

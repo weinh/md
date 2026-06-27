@@ -129,6 +129,14 @@ export const renderOptionFields = {
     .string()
     .optional()
     .describe(`Additional custom CSS appended after theme styles (highest priority).`),
+  inlineStyles: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe(
+      `Inline all CSS into element style="" attributes and remove the <style> tag `
+      + `(recommended for WeChat, which strips <style> and class-based rules). Set false to keep a <style> block.`,
+    ),
 }
 
 export function createServer() {
@@ -356,6 +364,7 @@ export function registerListTools(server: McpServer) {
         { name: `headingStyles`, type: `object`, default: `{}`, description: `Per-level heading styles. See list_heading_styles.` },
         { name: `codeBlockTheme`, type: `preset url enum`, default: `github-dark.min.css`, description: `highlight.js preset from list_code_block_themes.` },
         { name: `customCSS`, type: `string`, default: `''`, description: `User custom CSS appended last.` },
+        { name: `inlineStyles`, type: `boolean`, default: true, description: `Inline CSS into style="" attributes and drop the <style> tag (recommended for WeChat).` },
       ],
     }),
   )
