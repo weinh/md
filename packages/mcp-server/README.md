@@ -30,7 +30,7 @@ Convert Markdown text to styled HTML using the full doocs/md rendering pipeline.
 | `fontFamily`       | `string`                           | 无衬线预设       | Font family stack (see `list_fonts`)                                                                                      |
 | `fontSize`         | `string (px)`                      | `"16px"`         | Base font size (see `list_font_sizes`)                                                                                    |
 | `legend`           | `string`                           | `"alt"`          | Image caption format (see `list_legend_formats`)                                                                          |
-| `isMacCodeBlock`   | `boolean`                          | `false`          | Render code blocks with a macOS-style title bar                                                                           |
+| `isMacCodeBlock`   | `boolean`                          | `true`           | Render code blocks with a macOS-style title bar                                                                           |
 | `isShowLineNumber` | `boolean`                          | `false`          | Show line numbers in code blocks                                                                                          |
 | `citeStatus`       | `boolean`                          | `false`          | Convert links to footnote-style citations                                                                                 |
 | `countStatus`      | `boolean`                          | `false`          | Prepend a reading-time estimate                                                                                           |

@@ -75,7 +75,7 @@ export const renderOptionFields = {
   isMacCodeBlock: z
     .boolean()
     .optional()
-    .default(false)
+    .default(true)
     .describe(`Whether to render code blocks with a macOS-style title bar.`),
   isShowLineNumber: z
     .boolean()
@@ -354,7 +354,7 @@ export function registerListTools(server: McpServer) {
         { name: `fontFamily`, type: `string`, default: `system sans-serif stack`, description: `CSS font-family. See list_fonts.` },
         { name: `fontSize`, type: `string (px)`, default: `16px`, description: `Base font size. See list_font_sizes.` },
         { name: `legend`, type: `'title-alt' | 'alt-title' | 'title' | 'alt' | 'filename' | 'none'`, default: `alt`, description: `Image caption format.` },
-        { name: `isMacCodeBlock`, type: `boolean`, default: false, description: `macOS-style code block title bar.` },
+        { name: `isMacCodeBlock`, type: `boolean`, default: true, description: `macOS-style code block title bar.` },
         { name: `isShowLineNumber`, type: `boolean`, default: false, description: `Line numbers in code blocks.` },
         { name: `citeStatus`, type: `boolean`, default: false, description: `Links as footnote-style citations.` },
         { name: `countStatus`, type: `boolean`, default: false, description: `Prepend reading-time estimate.` },
