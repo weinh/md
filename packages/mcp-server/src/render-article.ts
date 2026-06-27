@@ -51,6 +51,20 @@ function loadCSSFile(filename: string): string {
   }
 }
 
+/**
+ * Shell design tokens the theme CSS expects from a host environment (the Web
+ * App's index.css :root, or the VS Code extension's css/index.ts). Standalone
+ * output has no such shell, so we define them here — otherwise `hsl(var(--foreground))`
+ * and `var(--blockquote-background)` resolve to nothing and table borders /
+ * blockquote backgrounds silently vanish. Mirrors
+ * apps/web/src/services/export/share-styles.ts (adds --muted-foreground).
+ */
+const SHELL_VARS_CSS = `:root {
+  --foreground: 0 0% 3.9%;
+  --muted-foreground: 0 0% 45.1%;
+  --blockquote-background: #f7f7f7;
+}`
+
 const baseCSSContent = loadCSSFile(`base.css`)
 const themeMap: Record<string, string> = {
   default: loadCSSFile(`default.css`),
@@ -139,6 +153,7 @@ export async function buildRenderedOutput(input: RenderMarkdownInput) {
   const customCSS = escapeStyleContent(input.customCSS?.trim() ?? ``)
 
   let mergedCSS = [
+    SHELL_VARS_CSS,
     variablesCSS,
     baseCSSContent,
     themeCSS,

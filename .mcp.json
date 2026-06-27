@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "md-mcp": {
+      "args": [
+        "--import",
+        "./packages/mcp-server/node_modules/tsx/dist/loader.mjs",
+        "./packages/mcp-server/run-file.mjs"
+      ],
+      "command": "node",
+      "type": "stdio"
+    }
+  }
+}

@@ -22,26 +22,28 @@ pnpm install
 
 Convert Markdown text to styled HTML using the full doocs/md rendering pipeline.
 
-| Parameter          | Type                               | Default     | Description                                            |
-| ------------------ | ---------------------------------- | ----------- | ------------------------------------------------------ |
-| `markdown`         | `string`                           | —           | Markdown source text                                   |
-| `theme`            | `"default" \| "grace" \| "simple"` | `"default"` | Visual theme (经典 / 优雅 / 简洁)                      |
-| `primaryColor`     | `string (hex)`                     | `"#0F4C81"` | Primary accent color (see `list_colors`)               |
-| `fontFamily`       | `string`                           | 无衬线预设  | Font family stack (see `list_fonts`)                   |
-| `fontSize`         | `string (px)`                      | `"16px"`    | Base font size (see `list_font_sizes`)                 |
-| `legend`           | `string`                           | `"alt"`     | Image caption format (see `list_legend_formats`)       |
-| `isMacCodeBlock`   | `boolean`                          | `false`     | Render code blocks with a macOS-style title bar        |
-| `isShowLineNumber` | `boolean`                          | `false`     | Show line numbers in code blocks                       |
-| `citeStatus`       | `boolean`                          | `false`     | Convert links to footnote-style citations              |
-| `countStatus`      | `boolean`                          | `false`     | Prepend a reading-time estimate                        |
-| `themeMode`        | `"light" \| "dark"`                | `"light"`   | Color mode for diagram extensions                      |
-| `isUseIndent`      | `boolean`                          | `false`     | Indent paragraph first lines                           |
-| `isUseJustify`     | `boolean`                          | `false`     | Justify paragraph text                                 |
-| `headingStyles`    | `object`                           | `{}`        | Per-level heading styles (see `list_heading_styles`)   |
-| `codeBlockTheme`   | preset URL                         | GitHub 主题 | highlight.js preset from `list_code_block_themes` only |
-| `customCSS`        | `string`                           | `""`        | Additional custom CSS (highest priority)               |
+| Parameter          | Type                               | Default          | Description                                            |
+| ------------------ | ---------------------------------- | ---------------- | ------------------------------------------------------ |
+| `markdown`         | `string`                           | —                | Markdown source text                                   |
+| `theme`            | `"default" \| "grace" \| "simple"` | `"default"`      | Visual theme (经典 / 优雅 / 简洁)                      |
+| `primaryColor`     | `string (hex)`                     | `"#0F4C81"`      | Primary accent color (see `list_colors`)               |
+| `fontFamily`       | `string`                           | 无衬线预设       | Font family stack (see `list_fonts`)                   |
+| `fontSize`         | `string (px)`                      | `"16px"`         | Base font size (see `list_font_sizes`)                 |
+| `legend`           | `string`                           | `"alt"`          | Image caption format (see `list_legend_formats`)       |
+| `isMacCodeBlock`   | `boolean`                          | `false`          | Render code blocks with a macOS-style title bar        |
+| `isShowLineNumber` | `boolean`                          | `false`          | Show line numbers in code blocks                       |
+| `citeStatus`       | `boolean`                          | `false`          | Convert links to footnote-style citations              |
+| `countStatus`      | `boolean`                          | `false`          | Prepend a reading-time estimate                        |
+| `themeMode`        | `"light" \| "dark"`                | `"light"`        | Color mode for diagram extensions                      |
+| `isUseIndent`      | `boolean`                          | `false`          | Indent paragraph first lines                           |
+| `isUseJustify`     | `boolean`                          | `false`          | Justify paragraph text                                 |
+| `headingStyles`    | `object`                           | `{}`             | Per-level heading styles (see `list_heading_styles`)   |
+| `codeBlockTheme`   | preset URL                         | GitHub Dark 主题 | highlight.js preset from `list_code_block_themes` only |
+| `customCSS`        | `string`                           | `""`             | Additional custom CSS (highest priority)               |
 
 Returns `{ html, frontMatter, readingTime: { words, minutes } }`.
+
+> **Tip — complex Markdown?** Passing long documents or content with lots of quotes/backslashes through the `markdown` string argument means escaping them inside JSON. The **file-enabled entry** (`run-file.mjs`, see [Setup](#file-enabled-entry-run-filemjs)) exposes the same `render_markdown` tool but also accepts a `file` path (and an optional `outputFile`), so you can render a `.md` file directly with zero escaping.
 
 ### Other tools
 
@@ -78,6 +80,46 @@ Add to `.vscode/mcp.json` in the project root (already included in this repo):
 ```
 
 Then open the **MCP** panel in VS Code and start the `md` server.
+
+#### File-enabled entry (`run-file.mjs`)
+
+An alternative entry point `run-file.mjs` exposes a **superset** of `render_markdown` that can read the Markdown source from a file (and optionally write the rendered HTML to a file), avoiding JSON escaping for complex documents. All other tools are identical.
+
+`render_markdown` accepts these additional parameters in this entry:
+
+| Parameter    | Type     | Default | Description                                                                                                                            |
+| ------------ | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `file`       | `string` | —       | Path to a Markdown file to render (absolute, or relative to the server cwd). When provided, `markdown` is ignored.                     |
+| `markdown`   | `string` | —       | Inline Markdown source. Now **optional** — used only when `file` is not provided. Exactly one of `file` / `markdown` must be supplied. |
+| `outputFile` | `string` | —       | Optional path to write the rendered HTML to. When set, the response replaces inline `html` with the resolved `outputFile` path.        |
+
+To use it, point your MCP client at `run-file.mjs` instead of `run.mjs`. For example, in `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "md": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["--import", "tsx/esm", "${workspaceFolder}/packages/mcp-server/run-file.mjs"],
+      "cwd": "${workspaceFolder}/packages/mcp-server"
+    }
+  }
+}
+```
+
+Or run it locally:
+
+```bash
+pnpm --filter @md/mcp-server start:file   # stdio server
+pnpm --filter @md/mcp-server dev:file     # watch mode
+```
+
+Example prompt once connected:
+
+```
+把 ./README.md 用 grace 主题渲染，开启行号，结果写到 ./readme.html
+```
 
 ### Claude Desktop
 

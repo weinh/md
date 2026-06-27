@@ -113,7 +113,7 @@ export const defaultRenderOptions = {
   fontFamily: fontFamilyOptions[0].value,
   fontSize: fontSizeOptions[2].value,
   legend: legendOptions[3].value as LegendValue,
-  codeBlockTheme: codeBlockThemeOptions[0].value,
+  codeBlockTheme: codeBlockThemeOptions.find(o => o.label === `github-dark`)!.value,
   isMacCodeBlock: false,
   isShowLineNumber: false,
   citeStatus: false,

@@ -9,7 +9,9 @@
   },
   "scripts": {
     "start": "node --import tsx/esm run.mjs",
-    "dev": "node --import tsx/esm --watch run.mjs"
+    "dev": "node --import tsx/esm --watch run.mjs",
+    "start:file": "node --import tsx/esm run-file.mjs",
+    "dev:file": "node --import tsx/esm --watch run-file.mjs"
   },
   "dependencies": {
     "@md/core": "workspace:*",
