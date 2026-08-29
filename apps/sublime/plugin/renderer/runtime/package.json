@@ -1,0 +1,8 @@
+{
+  "name": "doocs-md-sublime-runtime",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "isomorphic-dompurify": "3.18.0"
+  }
+}

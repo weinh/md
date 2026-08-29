@@ -13,17 +13,18 @@
 
 ## Monorepo 结构
 
-| 工作区           | 路径                  | 说明                                                                 |
-| ---------------- | --------------------- | -------------------------------------------------------------------- |
-| `@md/web`        | `apps/web`            | 主应用，Vue 3 + 浏览器扩展（WXT: Chrome/Firefox）                    |
-| `doocs-md`       | `apps/vscode`         | VS Code 扩展（webpack 构建，marketplace ID: `doocs.doocs-md`）       |
-| `@md/utools`     | `apps/utools`         | uTools 插件打包                                                      |
-| `@md/core`       | `packages/core`       | 核心 Markdown 渲染引擎（marked + 自定义扩展）                        |
-| `@md/shared`     | `packages/shared`     | 共享工具函数、配置、类型、编辑器配置                                 |
-| `@md/config`     | `packages/config`     | TypeScript 配置基础文件                                              |
-| `@doocs/md-cli`  | `packages/md-cli`     | CLI 工具（Express 服务托管构建产物）                                 |
-| `@md/mcp-server` | `packages/mcp-server` | MCP 服务，为 AI Agent 暴露接口                                       |
-| `@md/api`        | `apps/api`            | 后端 API：账户登录 + 云同步 + 计费（Cloudflare Workers + Hono + D1） |
+| 工作区             | 路径                  | 说明                                                                 |
+| ------------------ | --------------------- | -------------------------------------------------------------------- |
+| `@md/web`          | `apps/web`            | 主应用，Vue 3 + 浏览器扩展（WXT: Chrome/Firefox）                    |
+| `doocs-md`         | `apps/vscode`         | VS Code 扩展（webpack 构建，marketplace ID: `doocs.doocs-md`）       |
+| `doocs-md-sublime` | `apps/sublime`        | Sublime Text 4 插件：浏览器 Markdown 预览（Node 渲染 sidecar）       |
+| `@md/utools`       | `apps/utools`         | uTools 插件打包                                                      |
+| `@md/core`         | `packages/core`       | 核心 Markdown 渲染引擎（marked + 自定义扩展）                        |
+| `@md/shared`       | `packages/shared`     | 共享工具函数、配置、类型、编辑器配置                                 |
+| `@md/config`       | `packages/config`     | TypeScript 配置基础文件                                              |
+| `@doocs/md-cli`    | `packages/md-cli`     | CLI 工具（Express 服务托管构建产物）                                 |
+| `@md/mcp-server`   | `packages/mcp-server` | MCP 服务，为 AI Agent 暴露接口                                       |
+| `@md/api`          | `apps/api`            | 后端 API：账户登录 + 云同步 + 计费（Cloudflare Workers + Hono + D1） |
 
 独立示例（不在 workspace 内）：`docs/examples/wechat-openapi-worker/` — 微信公众号 OpenAPI 代理 Worker。
 
@@ -66,6 +67,17 @@ pnpm vscode watch     # webpack 监听
 pnpm vscode build     # 生产 webpack 构建
 pnpm vscode package   # vsce 打包
 ```
+
+### Sublime Text 插件
+
+```bash
+pnpm sublime build        # esbuild 打包渲染 sidecar（plugin/renderer/server.cjs）+ 安装 runtime 依赖
+pnpm sublime dev-install  # 构建 + 同步 plugin/ 到本机 Sublime Text Packages 目录
+pnpm sublime package      # 生成 release/MdPreview-v<version>.sublime-package
+pnpm sublime test         # 渲染 / HTTP 协议 / Python 客户端冒烟测试
+```
+
+架构：Python（纯标准库，`plugin/` 目录即 Sublime 包）通过 `node server.cjs` 拉起本地渲染 sidecar（127.0.0.1 随机端口 + token），保存时重渲染、浏览器轮询自动刷新。`isomorphic-dompurify`（jsdom）沿用 `apps/vscode` 的方案外置在 `plugin/renderer/runtime/node_modules`；主题 CSS 经 esbuild `?raw` 插件直接复用 `@md/shared` 单一数据源。终端用户需要 Node.js ≥ 20。
 
 ### CLI & MCP
 

@@ -1,0 +1,49 @@
+// Md Preview settings — see README.md for the full option reference.
+// Render defaults mirror the doocs/md web editor; "inline_styles" is false
+// because browser previews don't need juice-inlining (Copy WeChat HTML
+// always inlines regardless).
+{
+  // --- sidecar / integration ---
+  // Absolute path to the node binary. Empty = auto-detect (PATH, homebrew, nvm).
+  "node_binary": "",
+  // Minimum Node.js version required by the bundled renderer.
+  "min_node_version": "20.0.0",
+  // Browser name for webbrowser.get() (e.g. "chrome", "firefox"). Empty = system default.
+  "browser": "",
+  // Log plugin + sidecar chatter to the cache log file
+  // (~/Library/Caches/Sublime Text/Cache/MdPreview/debug.log on macOS).
+  "debug": false,
+  // Re-render tracked buffers on save (the open browser tab auto-refreshes).
+  "auto_re_render_on_save": true,
+  // File extensions treated as Markdown (syntax fallback is always checked too).
+  "markdown_file_extensions": ["md", "markdown", "mdx"],
+  // Refuse to render documents larger than this many bytes.
+  "max_render_bytes": 2097152,
+  // How often (ms) the preview page polls for a new revision.
+  "poll_interval_ms": 800,
+  // Preview page layout: "adaptive" = PC-width reading layout (fills the
+  // window up to 960px, centered, default); or a fixed column width in px,
+  // e.g. 375 for the WeChat phone article column.
+  "preview_width": "adaptive",
+  // Sidecar exits after this many idle seconds (orphan protection).
+  "server_idle_timeout_seconds": 1800,
+
+  // --- doocs/md render options ---
+  "theme": "default",          // default | grace | simple
+  "primary_color": "#0F4C81",  // 6-digit hex
+  "font_family": "-apple-system-font,BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB , Microsoft YaHei UI , Microsoft YaHei ,Arial,sans-serif",
+  "font_size": "16px",         // 14px | 15px | 16px | 17px | 18px
+  "legend": "alt",             // title-alt | alt-title | title | alt | filename | none
+  "code_block_theme": "https://cdn-doocs.oss-cn-shenzhen.aliyuncs.com/npm/highlightjs/11.11.1/styles/github-dark.min.css",
+  "is_mac_code_block": true,
+  "is_show_line_number": false,
+  "cite_status": false,
+  "count_status": false,
+  "theme_mode": "light",       // light | dark (diagram extensions)
+  "is_use_indent": false,
+  "is_use_justify": false,
+  // e.g. { "h1": "border-bottom", "h2": "color-only" }
+  "heading_styles": {},
+  "custom_css": "",
+  "inline_styles": false
+}

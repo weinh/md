@@ -1,0 +1,34 @@
+{
+  "name": "doocs-md-sublime",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sublime Text 4 package: preview WeChat-formatted Markdown with the doocs/md renderer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doocs/md"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs && node scripts/copy-runtime-deps.mjs",
+    "dev-install": "node scripts/build.mjs && node scripts/copy-runtime-deps.mjs && node scripts/dev-install.mjs",
+    "package": "npm run build && node scripts/check-python.mjs && node scripts/package.mjs",
+    "test": "npm run build && node renderer/test/render.smoke.mjs && node renderer/test/server.smoke.mjs && node scripts/check-python.mjs && python3 renderer/test/py-client.smoke.py",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@md/core": "workspace:*",
+    "@md/shared": "workspace:*",
+    "isomorphic-dompurify": "^3.18.0",
+    "juice": "12.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "archiver": "^8.0.0",
+    "esbuild": "^0.28.1",
+    "tsx": "^4.22.4",
+    "typescript": "~6.0.3"
+  }
+}

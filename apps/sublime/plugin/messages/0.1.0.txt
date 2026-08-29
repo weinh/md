@@ -1,0 +1,7 @@
+Md Preview 0.1.0 — initial release.
+
+- Browser preview with the full doocs/md theme system (default / grace / simple)
+- Auto-refresh on save, scroll position preserved
+- "Copy WeChat HTML" produces juice-inlined, paste-ready rich HTML
+- Runs fully locally; the only network use is fetching the code-highlight
+  theme CSS on first render (degrades gracefully offline)

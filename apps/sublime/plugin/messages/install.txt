@@ -1,0 +1,17 @@
+Md Preview 0.1.0
+
+Preview WeChat-formatted Markdown from Sublime Text 4 in your browser, powered
+by the doocs/md renderer (https://github.com/doocs/md).
+
+Requirements:
+  - Sublime Text 4 (build 4200+)
+  - Node.js 20 or newer on your machine
+
+Quick start:
+  1. Open a .md file
+  2. Run "Md Preview: Open Preview" (default key: super+alt+m / ctrl+alt+m)
+  3. Save the file — the browser tab refreshes automatically
+
+The renderer runs as a local sidecar (127.0.0.1, random port) and exits by
+itself when idle. See the README for all settings (theme, colors, fonts,
+code-block style, and more).

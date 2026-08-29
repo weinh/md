@@ -1,0 +1,5 @@
+node_modules/
+plugin/renderer/server.cjs
+plugin/renderer/runtime/node_modules/
+release/
+renderer/test/*.actual.html

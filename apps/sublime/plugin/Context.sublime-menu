@@ -1,0 +1,9 @@
+[
+  {
+    "command": "md_preview_open",
+    "caption": "Md Preview: Open Preview",
+    "context": [
+      { "key": "selector", "operator": "equal", "operand": "text.html.markdown", "match_all": true }
+    ]
+  }
+]

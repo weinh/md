@@ -1,0 +1,8 @@
+[
+  { "caption": "Md Preview: Open Preview", "command": "md_preview_open" },
+  { "caption": "Md Preview: Close Preview", "command": "md_preview_close" },
+  { "caption": "Md Preview: Copy WeChat HTML", "command": "md_preview_copy_html" },
+  { "caption": "Md Preview: Restart Renderer Server", "command": "md_preview_restart_server" },
+  { "caption": "Md Preview: Settings", "command": "md_preview_open_settings" },
+  { "caption": "Md Preview: Key Bindings", "command": "md_preview_open_keymap" }
+]

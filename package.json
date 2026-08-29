@@ -20,6 +20,8 @@
     "web": "pnpm --filter @md/web",
     "vscode": "pnpm --prefix ./apps/vscode",
     "vscode:test": "pnpm --prefix ./apps/vscode test",
+    "sublime": "pnpm --prefix ./apps/sublime",
+    "sublime:test": "pnpm --prefix ./apps/sublime test",
     "mcp": "pnpm --filter @md/mcp-server",
     "api": "pnpm --filter @md/api",
     "cli": "pnpm --filter @doocs/md-cli",
