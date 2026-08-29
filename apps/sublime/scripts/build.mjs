@@ -55,9 +55,6 @@ await esbuild.build({
   sourcemap: false,
   legalComments: `none`,
   logLevel: `info`,
-  // mermaid's dynamic import('mermaid') stays a require that intentionally
-  // fails at runtime (placeholder remains) — keeps ~3MB of ESM out of the bundle
-  external: [`mermaid`],
   plugins: [rawLoaderPlugin, runtimeExternalPlugin],
 })
 

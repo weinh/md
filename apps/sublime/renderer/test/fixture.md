@@ -38,6 +38,14 @@ graph TD
   B --> C{Browser Preview}
 ```
 
+```mermaid
+sequenceDiagram
+  participant U as 用户
+  participant S as Sublime
+  U->>S: super+alt+m
+  S-->>U: 浏览器预览
+```
+
 - 列表项一
 - 列表项二
 

@@ -81,7 +81,8 @@ Sublime (Python 3.8, 纯标准库)              Node 渲染 sidecar (esbuild 单
 
 ## 已知限制
 
-- **Mermaid / PlantUML 图表显示为占位符**：Node 侧无法完成客户端图表渲染（渲染产物中不含图源，无法事后水合）。数学公式正常（原生 MathML）
+- **Mermaid 已支持**：sidecar 在真实 jsdom 环境中做服务端两遍渲染，图表以内联 SVG 输出（与 md.doocs.org 一致），**Copy WeChat HTML 同样包含图表**。极端复杂的图表因 Node 侧无真实排版引擎，尺寸可能与浏览器略有出入
+- **PlantUML 图表仍显示为占位符**（上游渲染依赖浏览器端 DOM，无法在 Node 复原）；数学公式正常（原生 MathML）
 - **代码高亮主题 CSS 首次渲染需联网**（之后有缓存）；离线时代码块降级为无高亮，其余功能不受影响
 - PlantUML 代码块每次渲染会请求 plantuml.com 官方服务器（上游行为）
 
@@ -105,7 +106,9 @@ auth, idle self-exit).
 refreshes itself. See the settings file for every option (theme, primary color,
 fonts, code-block style, and more).
 
-**Known limitations**: Mermaid/PlantUML diagrams render as placeholders
-(server-side output carries no diagram source); the code-highlight theme CSS is
-fetched over the network on first render and degrades gracefully offline; math
-renders via native MathML.
+**Known limitations**: Mermaid diagrams ARE rendered (server-side, in a real
+jsdom environment — inline SVG output matching md.doocs.org, included in
+"Copy WeChat HTML" too; very complex diagrams may size slightly differently
+than in a browser). PlantUML stays a placeholder; the code-highlight theme CSS
+is fetched over the network on first render and degrades gracefully offline;
+math renders via native MathML.

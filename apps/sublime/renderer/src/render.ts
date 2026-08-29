@@ -1,3 +1,4 @@
+import { waitForMermaid } from '@md/core/extensions'
 import { initRenderer } from '@md/core/renderer'
 import { processCSS } from '@md/core/theme/cssProcessor'
 import { generateCSSVariables, generateHeadingStyles } from '@md/core/theme/cssVariables'
@@ -86,10 +87,29 @@ export interface PreviewOutput {
   warnings: string[]
 }
 
-export async function buildPreviewOutput(markdown: string, rawOptions?: unknown): Promise<PreviewOutput> {
-  const warnings: string[] = []
-  const options = normalizeOptions(rawOptions)
+interface SinglePassOutput {
+  html: string
+  frontMatter: unknown
+  readingTime: { words: number, minutes: number }
+}
 
+const MERMAID_STATE_LOADING = 'data-md-diagram-state="loading"'
+const MERMAID_RETRY_PASSES = 3
+const MERMAID_PASS_TIMEOUT_MS = 15_000
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms)
+    // don't let an abandoned race timer hold the process (CLI mode) alive
+    timer.unref?.()
+  })
+}
+
+function hasPendingMermaid(fragment: string): boolean {
+  return fragment.includes(MERMAID_STATE_LOADING)
+}
+
+async function renderOnce(markdown: string, options: ReturnType<typeof normalizeOptions>): Promise<SinglePassOutput> {
   const renderer = initRenderer({
     isMacCodeBlock: options.isMacCodeBlock,
     isShowLineNumber: options.isShowLineNumber,
@@ -102,6 +122,33 @@ export async function buildPreviewOutput(markdown: string, rawOptions?: unknown)
   const { html: baseHtml, readingTime } = renderMarkdown(markdown, renderer)
   const processedHtml = postProcessHtml(baseHtml, readingTime, renderer)
   const { yamlData } = renderer.parseFrontMatterAndContent(markdown)
+
+  return {
+    html: processedHtml,
+    frontMatter: yamlData,
+    readingTime: {
+      words: readingTime.words,
+      minutes: readingTime.minutes,
+    },
+  }
+}
+
+export async function buildPreviewOutput(markdown: string, rawOptions?: unknown): Promise<PreviewOutput> {
+  const warnings: string[] = []
+  const options = normalizeOptions(rawOptions)
+
+  let output = await renderOnce(markdown, options)
+
+  // Mermaid pass: the synchronous render only fires the async renderers and
+  // emits placeholders. Wait for them (they fill the extension's LRU cache),
+  // then re-render — the sync path inlines cached SVGs. No-op for documents
+  // without diagrams.
+  for (let pass = 0; pass < MERMAID_RETRY_PASSES && hasPendingMermaid(output.html); pass++) {
+    await Promise.race([waitForMermaid(), sleep(MERMAID_PASS_TIMEOUT_MS)])
+    output = await renderOnce(markdown, options)
+  }
+  if (hasPendingMermaid(output.html))
+    warnings.push('mermaid diagrams did not finish rendering; placeholders kept')
 
   const cssConfig = {
     primaryColor: options.primaryColor,
@@ -126,16 +173,13 @@ export async function buildPreviewOutput(markdown: string, rawOptions?: unknown)
 
   mergedCSS = processCSS(mergedCSS)
 
-  const styledHtml = `<style>\n${mergedCSS}\n</style>\n${processedHtml}`
+  const styledHtml = `<style>\n${mergedCSS}\n</style>\n${output.html}`
   const html = options.inlineStyles ? inlineStylesheet(styledHtml) : styledHtml
 
   return {
     html,
-    frontMatter: yamlData,
-    readingTime: {
-      words: readingTime.words,
-      minutes: readingTime.minutes,
-    },
+    frontMatter: output.frontMatter,
+    readingTime: output.readingTime,
     warnings,
   }
 }
