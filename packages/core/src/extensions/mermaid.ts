@@ -51,6 +51,20 @@ function buildCacheKey(code: string, themeMode?: DiagramThemeMode): string {
   return simpleHash(`${code}-${diagramCacheThemeSuffix(themeMode)}`)
 }
 
+/**
+ * 将图源以 base64（UTF-8 安全）嵌入占位符的 data 属性，供浏览器端用真实
+ * mermaid 渲染——与 Web 应用（md.doocs.org）在浏览器中渲染图表同一机制，
+ * 字体度量与布局与演示站完全一致。base64 字符集对 HTML 属性安全，
+ * DOMPurify 默认放行 data-* 属性。
+ */
+function encodeDiagramSource(code: string): string {
+  const bytes = new TextEncoder().encode(code)
+  let binary = ''
+  for (const byte of bytes)
+    binary += String.fromCharCode(byte)
+  return btoa(binary)
+}
+
 // key -> svg（LRU 缓存，上限 50 条）
 const svgCache = createSVGCache(50)
 
@@ -153,7 +167,7 @@ export function markedMermaid(options?: MermaidOptionsSource): MarkedExtension {
           renderMermaid(id, code, cacheKey, themeMode)
 
           const messages = getDiagramMessages()
-          return `<!--mermaid-start--><div id="${id}" class="${className}" ${diagramStateAttr(MD_DIAGRAM_STATE.loading)}>${messages.mermaidLoading}</div><!--mermaid-end-->`
+          return `<!--mermaid-start--><div id="${id}" class="${className}" ${diagramStateAttr(MD_DIAGRAM_STATE.loading)} data-mermaid-src="${encodeDiagramSource(code)}">${messages.mermaidLoading}</div><!--mermaid-end-->`
         }),
       },
     ],
