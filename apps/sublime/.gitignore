@@ -1,5 +1,6 @@
 node_modules/
 plugin/renderer/server.cjs
 plugin/renderer/runtime/node_modules/
+plugin/renderer/vendor/
 release/
 renderer/test/*.actual.html

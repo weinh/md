@@ -189,6 +189,23 @@ async function run() {
     })
     check(`returnHtml honored`, typeof JSON.parse(res.body).html === `string` && JSON.parse(res.body).html.includes(`<section`), res.body.slice(0, 200))
 
+    // mermaid preview mode: client-side hydration (embedded source + CDN script)
+    res = await request(port, `POST`, `/render`, {
+      headers: auth,
+      body: { id: `smoke-mermaid`, markdown: `# 图\n\n\`\`\`mermaid\ngraph TD\n  A --> B\n\`\`\`\n` },
+    })
+    const hydrateDoc = await request(port, `GET`, JSON.parse(res.body).url)
+    check(`mermaid preview embeds diagram source`, hydrateDoc.body.includes(`data-mermaid-src="`) && hydrateDoc.body.includes(`/vendor/mermaid.mjs`))
+    check(`mermaid preview defers to browser rendering`, !/class="mermaid-diagram"><svg/.test(hydrateDoc.body) && hydrateDoc.body.includes(`data-md-diagram-state="loading"`))
+
+    // copy mode: server-rendered inline svg in the returned html
+    res = await request(port, `POST`, `/render`, {
+      headers: auth,
+      body: { id: `smoke-mermaid`, markdown: `# 图\n\n\`\`\`mermaid\ngraph TD\n  A --> B\n\`\`\`\n`, returnHtml: true },
+    })
+    const copyHtml = JSON.parse(res.body).html ?? ``
+    check(`mermaid copy html has inline svg`, copyHtml.includes(`mermaid-diagram"><svg`), copyHtml.slice(0, 200))
+
     res = await request(port, `POST`, `/shutdown`, { headers: auth })
     check(`shutdown accepted`, res.status === 200 && JSON.parse(res.body).ok === true, res.body)
 

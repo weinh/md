@@ -88,15 +88,21 @@ async function performRender(body: RenderRequestBody): Promise<RenderResult> {
   const pollMs = Number.isFinite(body.pollMs) && (body.pollMs ?? 0) > 0 ? body.pollMs! : 800
   const title = (body.title ?? 'Md Preview').slice(0, 200)
   const width = sanitizePreviewWidth(body.previewWidth)
-  const output = await buildPreviewOutput(body.markdown, body.options)
+  // browser previews hydrate mermaid client-side (exact md.doocs.org parity);
+  // returnHtml (WeChat copy) needs the server-rendered inline SVG
+  const output = await buildPreviewOutput(body.markdown, body.options, { serverMermaid: Boolean(body.returnHtml) })
 
   const previous = docs.get(body.id)
   const rev = (previous?.rev ?? 0) + 1
   const slug = previous?.slug ?? `${sanitizeSlug(body.id)}-${crypto.randomBytes(4).toString('hex')}`
 
+  const themeMode = body.options && typeof body.options === 'object' && (body.options as { themeMode?: unknown }).themeMode === 'dark'
+    ? 'dark'
+    : undefined
+
   const entry: DocEntry = {
     slug,
-    documentHtml: buildPreviewDocument(output.html, { slug, rev, pollMs, title, width }),
+    documentHtml: buildPreviewDocument(output.html, { slug, rev, pollMs, title, width, mermaidTheme: themeMode }),
     rev,
   }
   docs.set(body.id, entry)
@@ -253,6 +259,35 @@ export function startServer(): void {
   })
 }
 
+const VENDOR_MIME: Record<string, string> = {
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.map': 'application/json; charset=utf-8',
+}
+
+/** Serves the vendored mermaid (exact workspace version) for preview hydration. */
+function serveVendor(res: http.ServerResponse, pathname: string): void {
+  const relative = pathname.slice('/vendor/'.length)
+  if (relative.includes('..') || relative.includes('\0')) {
+    throw new HttpError(400, 'invalid vendor path')
+  }
+  const vendorPath = path.join(__dirname, 'vendor', relative)
+  try {
+    const asset = fs.readFileSync(vendorPath)
+    const mime = VENDOR_MIME[path.extname(vendorPath)] ?? 'application/octet-stream'
+    res.writeHead(200, {
+      'Content-Type': mime,
+      'Content-Length': asset.length,
+      'Cache-Control': 'public, max-age=86400, immutable',
+    })
+    res.end(asset)
+  }
+  catch {
+    throw new HttpError(404, `vendored asset not found: ${relative}`)
+  }
+}
+
 async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
   pokeIdle()
 
@@ -286,6 +321,11 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return
   }
 
+  if (method === 'GET' && pathname.startsWith('/vendor/')) {
+    serveVendor(res, pathname)
+    return
+  }
+
   if (method === 'GET' && pathname.startsWith('/p/')) {
     const entry = docsBySlug.get(pathname.slice('/p/'.length))
     if (!entry)
@@ -308,7 +348,8 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 /** One-shot mode for `server.cjs --render-file <path>`: full document to stdout. */
 export async function renderFileToStdout(filePath: string, options?: unknown, previewWidth?: number | string): Promise<void> {
   const markdown = fs.readFileSync(path.resolve(filePath), 'utf8')
-  const output = await buildPreviewOutput(markdown, options)
+  // CLI output may be viewed offline / piped anywhere — bake the server SVG
+  const output = await buildPreviewOutput(markdown, options, { serverMermaid: true })
   const documentHtml = buildPreviewDocument(output.html, {
     slug: 'cli',
     rev: 1,

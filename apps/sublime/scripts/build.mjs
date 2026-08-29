@@ -68,4 +68,43 @@ if (!bundle.includes(`./runtime/node_modules/isomorphic-dompurify`)) {
   )
 }
 
+// Vendor the EXACT mermaid version the workspace uses — the preview page
+// hydrates diagrams with it (served by the sidecar at /vendor/mermaid.mjs), so
+// browser rendering matches md.doocs.org, which bundles the same version.
+// mermaid is a transitive dep (of @md/core), so resolve through core's real
+// node_modules (pnpm keeps per-package symlinks there).
+const { createRequire } = await import(`node:module`)
+const requireFromPkg = createRequire(path.join(pkgRoot, `package.json`))
+const mermaidDist = `dist/mermaid.esm.min.mjs`
+const candidates = []
+for (const base of [path.join(pkgRoot, `node_modules`), fs.realpathSync(path.join(pkgRoot, `node_modules`, `@md`, `core`, `node_modules`))]) {
+  candidates.push(path.join(base, `mermaid`, mermaidDist))
+}
+try {
+  candidates.unshift(requireFromPkg.resolve(`mermaid/${mermaidDist}`))
+}
+catch {
+  // exports map blocks the subpath — the path candidates cover it
+}
+const mermaidEntry = candidates.find(candidate => fs.existsSync(candidate))
+if (!mermaidEntry)
+  throw new Error(`mermaid ${mermaidDist} not found — expected it via @md/core's node_modules`)
+const vendorDir = path.join(pkgRoot, `plugin`, `renderer`, `vendor`)
+fs.rmSync(vendorDir, { recursive: true, force: true })
+fs.mkdirSync(vendorDir, { recursive: true })
+fs.copyFileSync(mermaidEntry, path.join(vendorDir, `mermaid.mjs`))
+// mermaid.esm.min.mjs is code-split — its chunk imports are relative, so the
+// chunks tree must sit next to the entry at the same relative depth
+const chunksDir = path.join(path.dirname(mermaidEntry), `chunks`)
+if (fs.existsSync(chunksDir)) {
+  fs.cpSync(chunksDir, path.join(vendorDir, `chunks`), {
+    recursive: true,
+    filter: source => !source.endsWith(`.map`),
+  })
+}
+const vendoredBytes = fs.readdirSync(path.join(vendorDir, `chunks`), { recursive: true, withFileTypes: true })
+  .filter(e => e.isFile())
+  .length
+console.log(`✓ vendored mermaid => ${path.relative(pkgRoot, path.join(vendorDir, `mermaid.mjs`))} (+${vendoredBytes} chunks)`)
+
 console.log(`✓ renderer bundle => ${path.relative(pkgRoot, outfile)}`)

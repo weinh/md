@@ -103,6 +103,8 @@ def main():
     conn.close()
     check('preview document served', response.status == 200 and document.startswith('<!DOCTYPE html>'))
     check('previewWidth 375 served', 'width: 375px' in document and 'max-width: 960px' not in document)
+    check('mermaid preview embeds source for browser hydration',
+          'data-mermaid-src="' in document and '/vendor/mermaid.mjs' in document)
     check('cjk survives the round-trip', '一级标题' in document and 'mac-sign' in document)
     check('reading stats included', '阅读' in document or '字数' in document)
 

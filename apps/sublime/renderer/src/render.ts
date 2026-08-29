@@ -87,6 +87,17 @@ export interface PreviewOutput {
   warnings: string[]
 }
 
+export interface BuildOptions {
+  /**
+   * Render mermaid to inline SVG server-side (jsdom approximation). Used for
+   * WeChat-bound output (scripts are stripped there). Browser previews skip
+   * it: the placeholder embeds the diagram source (data-mermaid-src) and the
+   * page hydrates it with real mermaid — the exact md.doocs.org mechanism,
+   * with real font metrics and layout.
+   */
+  serverMermaid?: boolean
+}
+
 interface SinglePassOutput {
   html: string
   frontMatter: unknown
@@ -133,22 +144,25 @@ async function renderOnce(markdown: string, options: ReturnType<typeof normalize
   }
 }
 
-export async function buildPreviewOutput(markdown: string, rawOptions?: unknown): Promise<PreviewOutput> {
+export async function buildPreviewOutput(markdown: string, rawOptions?: unknown, buildOptions: BuildOptions = {}): Promise<PreviewOutput> {
   const warnings: string[] = []
   const options = normalizeOptions(rawOptions)
 
   let output = await renderOnce(markdown, options)
 
-  // Mermaid pass: the synchronous render only fires the async renderers and
-  // emits placeholders. Wait for them (they fill the extension's LRU cache),
-  // then re-render — the sync path inlines cached SVGs. No-op for documents
-  // without diagrams.
-  for (let pass = 0; pass < MERMAID_RETRY_PASSES && hasPendingMermaid(output.html); pass++) {
-    await Promise.race([waitForMermaid(), sleep(MERMAID_PASS_TIMEOUT_MS)])
-    output = await renderOnce(markdown, options)
+  // Server-side mermaid pass: the synchronous render only fires the async
+  // renderers and emits placeholders. Wait for them (they fill the extension's
+  // LRU cache), then re-render — the sync path inlines cached SVGs. Only for
+  // script-stripped consumers (WeChat copy); browser previews hydrate from the
+  // embedded diagram source instead.
+  if (buildOptions.serverMermaid) {
+    for (let pass = 0; pass < MERMAID_RETRY_PASSES && hasPendingMermaid(output.html); pass++) {
+      await Promise.race([waitForMermaid(), sleep(MERMAID_PASS_TIMEOUT_MS)])
+      output = await renderOnce(markdown, options)
+    }
+    if (hasPendingMermaid(output.html))
+      warnings.push('mermaid diagrams did not finish rendering; placeholders kept')
   }
-  if (hasPendingMermaid(output.html))
-    warnings.push('mermaid diagrams did not finish rendering; placeholders kept')
 
   const cssConfig = {
     primaryColor: options.primaryColor,
