@@ -54,6 +54,9 @@ function buildCacheKey(code: string, themeMode?: DiagramThemeMode): string {
 // key -> svg（LRU 缓存，上限 50 条）
 const svgCache = createSVGCache(50)
 
+// 在途的异步渲染；renderMermaid 是 fire-and-forget 的，这里补一个可等待的句柄
+const pendingRenders = new Set<Promise<void>>()
+
 async function renderMermaidSvg(code: string, themeMode?: DiagramThemeMode): Promise<string> {
   const cacheKey = buildCacheKey(code, themeMode)
   const cached = svgCache.get(cacheKey)
@@ -92,9 +95,25 @@ function renderMermaid(id: string, code: string, cacheKey: string, themeMode?: D
     }
   }
 
-  void renderMermaidSvg(code, themeMode)
+  const tracked = renderMermaidSvg(code, themeMode)
     .then(handleResult)
     .catch(handleError)
+    .finally(() => {
+      pendingRenders.delete(tracked)
+    })
+  pendingRenders.add(tracked)
+}
+
+/**
+ * 等待所有在途的 Mermaid 异步渲染结束（成功或失败）。
+ *
+ * 同步渲染（marked）只会触发渲染并返回占位符；Node 侧消费者（sidecar、
+ * SSR）可在首遍渲染后 await 本函数，再重新渲染同一内容——此时 svgCache
+ * 已填充，同步路径会直接内联 SVG。
+ */
+export async function waitForMermaid(): Promise<void> {
+  while (pendingRenders.size > 0)
+    await Promise.allSettled([...pendingRenders])
 }
 
 export function markedMermaid(options?: MermaidOptionsSource): MarkedExtension {
