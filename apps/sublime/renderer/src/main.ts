@@ -80,30 +80,157 @@ function installStubGlobals() {
 
 /** jsdom has SVG elements but no SVG layout — approximate box metrics from text. */
 function patchSvgMetrics(window: any) {
-  const estimate = (text: string) => {
-    const lineWidth = (line: string) => {
-      let width = 0
-      for (const ch of line.trim()) {
-        // CJK/fullwidth glyphs are font-size wide, latin ~half of it
-        width += ch.codePointAt(0)! >= 0x2E80 ? 16 : 8.4
-      }
-      return width
-    }
-    const lines = text.split('\n')
-    let width = 0
-    for (const line of lines)
-      width = Math.max(width, lineWidth(line))
-    return { width: Math.max(width, 16), height: Math.max(lines.length * 16, 16) }
-  }
+  // mermaid's default label font size (theme fontSize); elements may override
+  // via inline style (calculateTextDimensions sets font-size explicitly).
+  const DEFAULT_FONT_SIZE = 16
 
   // non-visual SVG elements carry their payload (CSS!) in textContent — and the
   // payload leaks into ancestors' textContent too (measuring the <svg> root once
   // produced a 44000px-wide flowchart), so text estimation skips them entirely
   const NON_VISUAL = new Set(['STYLE', 'SCRIPT', 'TITLE', 'DESC', 'META', 'LINK'])
 
+  function parsePx(value: unknown): number | null {
+    const m = /^([\d.]+)px$/.exec(String(value ?? '').trim())
+    return m ? Number(m[1]) : null
+  }
+
+  function effectiveFontSize(el: any): number {
+    const inline = parsePx(el.style?.fontSize)
+    if (inline)
+      return inline
+    try {
+      const computed = parsePx(window.getComputedStyle(el)?.fontSize)
+      if (computed)
+        return computed
+    }
+    catch {
+      // jsdom may not resolve stylesheets for detached elements
+    }
+    return DEFAULT_FONT_SIZE
+  }
+
+  function charWidth(ch: string, fontSize: number): number {
+    const code = ch.codePointAt(0)!
+    // CJK/fullwidth glyphs are font-size wide
+    if (code >= 0x2E80)
+      return fontSize
+    // calibrated against real trebuchet/ms rendering:
+    // "dev:v10 进程 PROFILE=v10" → 189px (mixed case), "读/写只碰 profile='v10' 行" → 184px
+    if (ch >= 'A' && ch <= 'Z')
+      return fontSize * 0.59
+    // eslint-disable-next-line regexp/no-obscure-range -- ASCII punctuation ranges, escaped for readability
+    if (/[!-/:-@[-`{-~ ]/.test(ch))
+      return fontSize * 0.34
+    return fontSize * 0.45
+  }
+
+  function textWidth(line: string, fontSize: number): number {
+    let width = 0
+    for (const ch of line)
+      width += charWidth(ch, fontSize)
+    return width
+  }
+
+  /**
+   * Greedy wrap with `white-space: break-spaces` semantics — mermaid's
+   * htmlLabel divs carry inline `max-width` + `line-height` + break-spaces,
+   * so long labels wrap (width capped, height grows per line).
+   */
+  function wrapLines(text: string, fontSize: number, maxWidth: number): { lineCount: number, width: number } {
+    let lineCount = 0
+    let width = 0
+    for (const paragraph of text.split('\n')) {
+      let current = 0
+      let currentWidth = 0
+      for (const ch of paragraph) {
+        const w = charWidth(ch, fontSize)
+        if (current > 0 && currentWidth + w > maxWidth) {
+          lineCount++
+          width = Math.max(width, currentWidth)
+          current = 0
+          currentWidth = 0
+        }
+        current++
+        currentWidth += w
+      }
+      lineCount++
+      width = Math.max(width, currentWidth)
+    }
+    return { lineCount: Math.max(lineCount, 1), width: Math.max(width, 1) }
+  }
+
+  /** tight single-line-box estimate (SVG <text> getBBox semantics) */
+  function estimate(text: string, fontSize = DEFAULT_FONT_SIZE) {
+    const lines = text.split('\n')
+    let width = 0
+    for (const line of lines)
+      width = Math.max(width, textWidth(line.trim(), fontSize))
+    return { width: Math.max(width, 16), height: Math.max(lines.length * fontSize, 16) }
+  }
+
+  /**
+   * htmlLabel div estimate — replays mermaid's own addHtmlSpan choreography:
+   * measure once with `white-space: nowrap` (table-cell clamps at max-width,
+   * width == maxWidth makes mermaid switch to `break-spaces` + fixed width and
+   * re-measure for the wrapped height). Returning the wrapped size on the
+   * first call breaks that switch and squashes multi-line labels.
+   */
+  function estimateBlock(el: any, text: string): { width: number, height: number } {
+    const fontSize = effectiveFontSize(el)
+    const style = el.style ?? {}
+    const maxWidth = parsePx(style.maxWidth)
+    const inlineWidth = parsePx(style.width)
+    const whiteSpace = String(style.whiteSpace ?? '')
+    const lhRaw = String(style.lineHeight ?? '').trim()
+    // mermaid's own convention is line-height 1.5 (set inline on label divs);
+    // cluster-title divs lack it, so the fallback matches too
+    const lineHeight = /^[\d.]+$/.test(lhRaw)
+      ? Number(lhRaw) * fontSize
+      : parsePx(lhRaw) ?? fontSize * 1.5
+
+    const explicitLines = text.split('\n').filter(line => line.length > 0)
+
+    if (maxWidth !== null && whiteSpace.includes('nowrap')) {
+      // first measurement: no wrapping — width clamps at max-width, height
+      // counts only the explicit <br> line breaks
+      let natural = 0
+      for (const line of explicitLines)
+        natural = Math.max(natural, textWidth(line.trim(), fontSize))
+      return { width: Math.min(natural, maxWidth), height: Math.max(explicitLines.length, 1) * lineHeight }
+    }
+
+    if (maxWidth !== null) {
+      // second measurement (break-spaces + fixed width): greedy wrap
+      const wrapped = wrapLines(text, fontSize, maxWidth)
+      return { width: inlineWidth ?? wrapped.width, height: wrapped.lineCount * lineHeight }
+    }
+
+    // no inline max-width (wrapper divs): aggregate children instead of
+    // measuring the concatenated text — the natural width of a wrapper's full
+    // text once produced a 400px edge label where the browser says 200
+    if (el.children && el.children.length > 0) {
+      let width = 0
+      let height = 0
+      for (const child of el.children) {
+        if (NON_VISUAL.has(child.tagName) || child.tagName === 'BR')
+          continue
+        const rect = estimateBlock(child, visualText(child))
+        width = Math.max(width, rect.width)
+        height = Math.max(height, rect.height)
+      }
+      if (width > 0 || height > 0)
+        return { width, height }
+    }
+
+    const tight = estimate(text, fontSize)
+    return { width: tight.width, height: tight.height / fontSize * lineHeight }
+  }
+
   function visualText(node: any): string {
     if (node.nodeType !== 1)
       return node.nodeType === 3 ? node.data : ''
+    if (node.tagName === 'BR')
+      return '\n'
     if (NON_VISUAL.has(node.tagName))
       return ''
     let text = ''
@@ -175,7 +302,7 @@ function patchSvgMetrics(window: any) {
     }
 
     // text/tspan and anything else: estimated from visual text; y is the baseline
-    const text = estimate(visualText(el))
+    const text = estimate(visualText(el), effectiveFontSize(el))
     return { x: num('x') ?? 0, y: (num('y') ?? text.height) - text.height, w: text.width, h: text.height }
   }
 
@@ -220,20 +347,22 @@ function patchSvgMetrics(window: any) {
         return { x: 0, y: 0, width: 0, height: 0 }
       if (this.children && this.children.length > 0)
         return containerBBox(this)
-      const { width, height } = estimate(visualText(this))
+      const { width, height } = estimate(visualText(this), effectiveFontSize(this))
       return { x: 0, y: 0, width, height }
     }
   }
 
-  // jsdom's getBoundingClientRect is all zeros; mermaid/d3 read it for sizing
-  // (htmlLabels measure their divs, which may wrap spans)
+  // jsdom's getBoundingClientRect is all zeros; mermaid/d3 read it for sizing.
+  // htmlLabel divs (flowchart/stateDiagram nodes & edge labels) carry inline
+  // max-width + line-height, so this must WRAP like the browser does — the
+  // single-line estimate was what made diagrams come out wide and squashed.
   const elementProto = window.Element?.prototype
   if (elementProto && !elementProto.__mdPreviewMetricsPatched) {
     elementProto.__mdPreviewMetricsPatched = true
     elementProto.getBoundingClientRect = function () {
       if (NON_VISUAL.has(this.tagName))
         return { x: 0, y: 0, width: 0, height: 0, left: 0, top: 0, right: 0, bottom: 0 }
-      const { width, height } = estimate(visualText(this))
+      const { width, height } = estimateBlock(this, visualText(this))
       return { x: 0, y: 0, width, height, left: 0, top: 0, right: width, bottom: height }
     }
   }
