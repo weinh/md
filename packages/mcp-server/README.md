@@ -11,7 +11,7 @@ Exposes the `doocs/md` markdown rendering engine and AI service configuration to
 - Clone the monorepo and install dependencies:
 
 ```bash
-git clone https://github.com/doocs/md.git
+git clone https://github.com/weinh/md.git
 cd md
 pnpm install
 ```

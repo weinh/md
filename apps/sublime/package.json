@@ -6,7 +6,7 @@
   "description": "Sublime Text 4 package: preview WeChat-formatted Markdown with the doocs/md renderer",
   "repository": {
     "type": "git",
-    "url": "https://github.com/doocs/md"
+    "url": "https://github.com/weinh/md"
   },
   "engines": {
     "node": ">=20"

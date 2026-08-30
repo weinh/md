@@ -22,7 +22,7 @@
 ### 方式一：从本仓库构建（开发者）
 
 ```bash
-git clone https://github.com/doocs/md
+git clone https://github.com/weinh/md
 cd md
 pnpm install
 pnpm sublime package     # 产出 apps/sublime/release/MdPreview-v<version>.sublime-package
