@@ -73,7 +73,7 @@ pnpm vscode package   # vsce 打包
 ```bash
 pnpm sublime build        # esbuild 打包渲染 sidecar（plugin/renderer/server.cjs）+ 安装 runtime 依赖
 pnpm sublime dev-install  # 构建 + 同步 plugin/ 到本机 Sublime Text Packages 目录
-pnpm sublime package      # 生成 release/MdPreview-v<version>.sublime-package
+pnpm sublime package      # 生成 release/MdPreview.sublime-package
 pnpm sublime test         # 渲染 / HTTP 协议 / Python 客户端冒烟测试
 ```
 

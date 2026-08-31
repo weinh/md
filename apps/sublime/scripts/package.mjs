@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Zip plugin/ (contents at zip root) into release/MdPreview-v<version>.sublime-package.
+ * Zip plugin/ (contents at zip root) into release/MdPreview.sublime-package.
  *
  * Staged via a clean copy so junk (.DS_Store, __pycache__, npm lockfiles,
  * leftover dev-sync state) can never sneak into the archive. Modeled on
@@ -67,7 +67,7 @@ await writeFile(
   `doocs-md-sublime ${version}\nbuilt from apps/sublime at ${new Date().toISOString()}\n`,
 )
 
-const zipPath = path.join(releaseDir, `MdPreview-v${version}.sublime-package`)
+const zipPath = path.join(releaseDir, `MdPreview.sublime-package`)
 await new Promise((resolve, reject) => {
   const output = fs.createWriteStream(zipPath)
   const archive = new ZipArchive({ zlib: { level: 9 } })

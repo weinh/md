@@ -25,7 +25,7 @@
 git clone https://github.com/weinh/md
 cd md
 pnpm install
-pnpm sublime package     # 产出 apps/sublime/release/MdPreview-v<version>.sublime-package
+pnpm sublime package     # 产出 apps/sublime/release/MdPreview.sublime-package
 ```
 
 将 `.sublime-package` 文件放入 `Preferences → Browse Packages` 打开的目录的上一级 `Installed Packages/`，重启 Sublime。
