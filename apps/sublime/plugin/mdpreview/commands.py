@@ -168,10 +168,15 @@ class MdPreviewOpenSettingsCommand(sublime_plugin.WindowCommand):
         })
 
 
+# sublime.platform() is lowercase; keymap file names use the capitalized form
+_PLATFORM_KEYMAP = {'windows': 'Windows', 'linux': 'Linux', 'osx': 'OSX'}
+
+
 class MdPreviewOpenKeymapCommand(sublime_plugin.WindowCommand):
-    """md_preview_open_keymap — open the user key bindings for this package."""
+    """md_preview_open_keymap — open the package key bindings for this platform."""
 
     def run(self):
+        platform = _PLATFORM_KEYMAP.get(sublime.platform(), 'Linux')
         self.window.run_command('edit_settings', {
-            'base_file': '${packages}/MdPreview/Default (%s).sublime-keymap' % sublime.platform(),
+            'base_file': '${packages}/MdPreview/Default (%s).sublime-keymap' % platform,
         })

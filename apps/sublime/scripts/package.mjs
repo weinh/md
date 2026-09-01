@@ -96,6 +96,12 @@ function assert(condition, message) {
 
 if (entries.length > 0) {
   assert(entries.includes(`md_preview.py`), `md_preview.py must be at the zip root`)
+  for (const platform of [`Windows`, `Linux`, `OSX`]) {
+    assert(
+      entries.includes(`Default (${platform}).sublime-keymap`),
+      `Default (${platform}).sublime-keymap must be included`,
+    )
+  }
   assert(
     entries.includes(`renderer/runtime/node_modules/isomorphic-dompurify/package.json`),
     `runtime isomorphic-dompurify must be included`,
